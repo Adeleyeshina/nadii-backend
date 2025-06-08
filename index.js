@@ -18,7 +18,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended : false}))
 app.use(cookieParser())
 app.use(cors({
-    origin : import.meta.env.FRONTEND_URI,
+    origin : process.env.FRONTEND_URI,
     methods : ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders : ['Content-Type', 'Authorization'],
     credentials : true
