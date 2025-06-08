@@ -95,7 +95,7 @@ export const login = async(req, res) => {
     if(user && isPassword && user.isVerified) {
         const {accessToken, refreshToken } = generateToken(user._id)
         try {
-            //await redis.set(`refresh_token:${user._id}`, refreshToken, "EX", 7*24*60)
+            await redis.set(`refresh_token:${user._id}`, refreshToken, "EX", 7*24*60)
         } catch (error) {
             console.log("Error in sending token to redis in login controller", error.message);
             
