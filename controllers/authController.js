@@ -36,15 +36,14 @@ export const signup = async(req, res) => {
             verificationToken : verificationCode,
             password : hashedPassword
         })
-        if(newUser) {
-
-            await newUser.save()
+        if(newUser) {           
             try {
                 await accountActivationEmail(newUser.email, verificationCode, name)
             } catch (error) {
                 console.log("Error sending message", error.message)
+                return res.status(400).json({message : "Error sending message please confirm your email address"})
             }
-
+             await newUser.save()
             return res.status(201).json({
                 message : "Check your email to verify account",
                 name,
