@@ -48,8 +48,6 @@ export const signup = async(req, res) => {
                 message : "Check your email to verify account",
                 name,
                 email,
-                verificationToken  : newUser.verificationToken,
-                expiresAt : newUser.expiresAt
             })
         }
     } catch (error) {
@@ -105,7 +103,10 @@ export const login = async(req, res) => {
             _id : user._id,
             name : user.name,
             email : user.email,
-            role : user.role
+            role : user.role,
+            firstname : user.firstname,
+            lastname : user.lastname,
+            phone : user.phone,
         })
     }
     res.status(400).json({message : "Invalid username or password"})
@@ -123,9 +124,46 @@ export const logout = async(req, res) => {
         }
         res.clearCookie("accessToken")
         res.clearCookie("refreshToken")
-        res.send({message : "Logout Succesful"})
+        res.status(200).json({message : "Logout Succesful"})
     } catch (error) {
         console.log('Error in logout controller', error);
+        res.status(500).json({message : 'Internal Server Error'})
+    }
+}
+
+export const updateAccountInfo = async (req, res) => {
+    try {
+        const {firstname, lastname, email, phone} = req.body
+        if (!firstname || !lastname || !email || !phone) {
+            return res.status(400).json({message : "All the fill all the form"})
+        }
+        
+        const user = await User.findById(req.user._id) 
+        if(!user) {
+            return res.status(404).json({message : "User not found"})
+        }
+
+        if(req.user.email !== email) {
+            const userExist = await User.findOne({email}) 
+            if(userExist) {
+                return res.status(400).json({message : "There's an account with the email"})
+            }
+        }
+        
+        const updatedInfo = await User.findByIdAndUpdate(req.user._id, req.body, {new : true}).select("-password")
+        if(!updatedInfo) {
+            return res.status(400).json({message : "Error updating user info"})
+        }
+        res.status(200).json({message : "Info updated succesfully", 
+                    name : updatedInfo.name,
+                    email : updatedInfo.email,
+                    role : updatedInfo.role,
+                    firstname : updatedInfo.firstname,
+                    lastname : updatedInfo.lastname,
+                    phone : updatedInfo.phone,
+        })
+    } catch (error) {
+        console.log('Error in update account controller', error);
         res.status(500).json({message : 'Internal Server Error'})
     }
 }
@@ -208,7 +246,17 @@ export const refreshToken = async (req, res) => {
 
 export const getProfile = async(req, res)=> {
     try {
-     res.status(200).json(req.user)
+        const user = await User.findById(req.user._id)
+
+     res.status(200).json({
+        _id : user._id,
+        name : user.name,
+        role : user.role,
+        email : user.email,
+        firstname : user.firstname,
+        lastname : user.lastname,
+        phone : user.phone,
+     })
     } catch (error) {
         console.log('Error in getProfile controller', error);
         res.status(500).json({message : 'Internal Server Error'})

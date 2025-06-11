@@ -10,6 +10,7 @@ import cartRoute from'./routes/cartRoute.js'
 import paymentRoute from'./routes/paymentRoute.js'
 import contactRoute from './routes/contactRoute.js'
 import bookngRoute from './routes/bookingRoute.js'
+import addressRoute from './routes/addressRoute.js'
 
 dotenv.config()
 
@@ -21,7 +22,7 @@ app.use(express.urlencoded({extended : false}))
 app.use(cookieParser())
 app.use(cors({
     origin : process.env.FRONTEND_URI,
-    methods : ['GET', 'POST', 'PUT', 'DELETE'],
+    methods : ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders : ['Content-Type', 'Authorization'],
     credentials : true
 }))
@@ -32,6 +33,8 @@ app.use("/api/cart", cartRoute)
 app.use("/api/payments", paymentRoute)
 app.use("/api/contactlist", contactRoute)
 app.use("/api/booking", bookngRoute)
+app.use("/api/address", addressRoute)
+
 
 
 app.listen(PORT, () => {

@@ -22,6 +22,9 @@ const userSchema = new mongoose.Schema ({
     verificationToken : {
         type : String,
     },
+    firstname : String,
+    lastname : String,
+    phone : String,
     cartItems : [
         {
             quantity : {
