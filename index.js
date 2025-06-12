@@ -11,6 +11,7 @@ import paymentRoute from'./routes/paymentRoute.js'
 import contactRoute from './routes/contactRoute.js'
 import bookngRoute from './routes/bookingRoute.js'
 import addressRoute from './routes/addressRoute.js'
+import './keyAlive.js'
 
 dotenv.config()
 
@@ -27,6 +28,9 @@ app.use(cors({
     credentials : true
 }))
 
+app.get("/", (req, res) => {
+    res.json("Hello")
+})
 app.use("/api/auth", authRoutes)
 app.use("/api/products", productRoute)
 app.use("/api/cart", cartRoute)
