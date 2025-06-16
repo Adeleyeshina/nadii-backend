@@ -71,7 +71,7 @@ export const createBooking = async (req, res) => {
             return res.status(500).json({message : "An error occured"})
         }
         const booking = await Booking.create(req.body)
-        res.status(201).json({message :  "Message Sent"})
+        res.status(201).json(booking)
     } catch (error) {
         console.log("Error in creating booking controller", error.message);
         res.status(500).json({message : "Internal server error"})

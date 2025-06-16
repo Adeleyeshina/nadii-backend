@@ -25,6 +25,7 @@ const bookingSchema = new mongoose.Schema({
         required : true
     },
     note : String,
+    otherService : String,
 }, {timestamps : true})
 
 const Booking = mongoose.model("booking", bookingSchema)
