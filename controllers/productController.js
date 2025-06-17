@@ -89,7 +89,7 @@ export const deleteProduct = async (req, res) => {
 
 export const toggleFeaturedProduct = async (req, res) => {
     try {
-        const product = await findById(req.params.id)
+        const product = await Product.findById(req.params.id)
         if(product) {
             product.isFeatured = !product.isFeatured
             const updatedProduct = await product.save()
