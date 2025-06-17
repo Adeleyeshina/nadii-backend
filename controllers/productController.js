@@ -1,6 +1,7 @@
 import Product from "../models/productModel.js"
 import redis  from "../lib/redis.js"
 import cloudinary from '../lib/cloudinary.js'
+import mongoose from "mongoose"
 export const getAllProducts = async (req, res) => {
     try {
         const product = await Product.find({})
@@ -11,6 +12,44 @@ export const getAllProducts = async (req, res) => {
     }
 }
 
+export const getSingleProduct = async (req, res) => {
+    const {id} = req.params
+    try {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({message : "Invalid Product Id"})
+        }
+
+        const product = await Product.findById(id) 
+        if(!product) {
+            return res.status(404).json({message : "Product not found"})
+        }
+        res.status(200).json(product)
+    } catch (error) {
+        console.log("Error in get single product controller", error.message);
+        res.send(500).json({message : "Server error"})
+    }
+}
+
+export const recommendedProducts = async (req, res) => {
+    try {
+        const products = await Product.aggregate([
+            {$sample : {size : 4}},
+            {
+                $project : {
+                    _id : 1,
+                    name : 1,
+                    price : 1,
+                    image : 1
+                }
+            }
+        ])
+        
+        res.status(200).json(products)
+    } catch (error) {
+        console.log("Error in recommended product controller", error.message);
+        res.send(500).json({message : "Server error"})
+    }
+}
 export const getFeaturedProducts = async (req, res) => {
     try {
         let featuredProducts = await redis.get("featured_products")
