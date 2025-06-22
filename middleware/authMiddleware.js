@@ -4,7 +4,7 @@ export const protectRoute = async (req, res, next) => {
     try {
         const accessToken = req.cookies.accessToken;
         if(!accessToken) {
-            return res.status(404).json({message : "Unauthorized - No access token provided"})
+            return res.status(404).json({message : "Your session has expired. Please login again to continue"})
         }
 
         try {
@@ -27,7 +27,7 @@ export const protectRoute = async (req, res, next) => {
 
     } catch (error) {
         console.log("Error in protect routes middleware", error.message);
-        return res.status(401).json({message : "Unauthorized = Invalid access token"})
+        return res.status(401).json({message : "Unauthorized  Invalid access token"})
     }
 }
 

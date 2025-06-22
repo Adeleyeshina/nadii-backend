@@ -122,8 +122,16 @@ export const logout = async(req, res) => {
             const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
             await redis.del(`refresh_token:${decoded.userId}`)
         }
-        res.clearCookie("accessToken")
-        res.clearCookie("refreshToken")
+        res.clearCookie("accessToken", {
+            httpOnly : true,
+            sameSite : 'None',
+            secure: true,
+        })
+        res.clearCookie("refreshToken", {
+            httpOnly : true,
+            sameSite : 'None',
+            secure: true,
+        })
         res.status(200).json({message : "Logout Succesful"})
     } catch (error) {
         console.log('Error in logout controller', error);
@@ -233,7 +241,7 @@ export const refreshToken = async (req, res) => {
         })
         res.cookie ("accessToken", accessToken, {
             httpOnly : true,
-            sameSite : 'strict',
+            sameSite : 'None',
             secure : true,
             maxAge : 15 * 60 *1000
         })
