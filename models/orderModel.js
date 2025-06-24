@@ -30,9 +30,18 @@ const orderSchema = new mongoose.Schema({
         required : true,
         min : 0
     },
-    paystackId : {
+    reference : {
         type : String,
         unique : true,
+    },
+    address : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "Address"
+    },
+    status : {
+        type : String,
+        enum : ["pending", "paid", "failed", "abandoned", "success"],
+        default : "pending"
     }
 }, {timestamps : true})
 

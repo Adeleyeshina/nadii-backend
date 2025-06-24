@@ -11,6 +11,7 @@ import paymentRoute from'./routes/paymentRoute.js'
 import contactRoute from './routes/contactRoute.js'
 import bookngRoute from './routes/bookingRoute.js'
 import addressRoute from './routes/addressRoute.js'
+import orderRoute from './routes/orderRoute.js'
 import './keyAlive.js'
 
 dotenv.config()
@@ -40,6 +41,7 @@ app.use("/api/payments", paymentRoute)
 app.use("/api/contactlist", contactRoute)
 app.use("/api/booking", bookngRoute)
 app.use("/api/address", addressRoute)
+app.use("/api/orders", orderRoute)
 
 
 
