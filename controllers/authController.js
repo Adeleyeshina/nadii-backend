@@ -38,10 +38,10 @@ export const signup = async(req, res) => {
         })
         if(newUser) {           
             try {
-                await accountActivationEmail(newUser.email, verificationCode, name)
+                await accountActivationEmail(newUser.email, verificationCode, name, "Activate your account", "signup")
             } catch (error) {
                 console.log("Error sending message", error.message)
-                return res.status(400).json({message : "Error sending message please confirm your email address"})
+                return res.status(400).json({message : "Error sending message"})
             }
              await newUser.save()
             return res.status(201).json({
@@ -188,13 +188,14 @@ export const forgetPassword = async(req, res) =>{
         user.verificationToken = verificationCode;
         await user.save()
         try {
-            await sendMail(email, verificationCode)
+            await accountActivationEmail(email, verificationCode, user.name, "Reset password", "reset")
         } catch (error) {
             console.log("Error in sending message in forget password controller", error.message);
+            return res.status(400).json({message : "Error sending message"})
             
         }
         
-        res.status(200).json({message: "Verification code sent to your email"})
+        res.status(200).json({message: "reset code sent to your email"})
     } catch (error) {
         console.log('Error in forget password controller', error);
         res.status(500).json({message : 'Internal Server Error'})
@@ -205,12 +206,12 @@ export const resetPassword = async(req, res) =>{
     try {
         const {token} = req.params;
         const { password}= req.body;
-        if(password.length < 6) {
+        if(password?.length < 6) {
             return res.status(400).json({message : "Password length cannot less than 6 "})
         }
         const user = await User.findOne({verificationToken : token});
         if(!user) {
-            return res.status(404).json({message : "User not found"})
+            return res.status(404).json({message : "Invalid or expired token"})
         }
 
         const salt = await bcrypt.genSalt(10)
