@@ -1,7 +1,9 @@
 import express from 'express'
-import { allOrders } from '../controllers/orderController.js';
+import { allOrders, userOrders } from '../controllers/orderController.js';
 const router = express.Router()
+import {protectRoute, adminRoute} from '../middleware/authMiddleware.js'
 
-router.get("/", allOrders)
+router.get("/admin", protectRoute, adminRoute, allOrders)
+router.get("/user", protectRoute, userOrders)
 
 export default router;

@@ -2,6 +2,7 @@ import Address from "../models/addressModel.js";
 import Product from "../models/productModel.js";
 import Order from "../models/orderModel.js"
 import axios from 'axios'
+import { orderAdminNotificationEmail, orderCustomerNotificationEmail } from "../lib/nodemailer.js";
 
 export const initializePayment = async (req, res) => {
     try {
@@ -54,7 +55,7 @@ export const initializePayment = async (req, res) => {
             products,
             totalAmount : total,
             reference,
-            //address: userAddress._id,
+            address: userAddress._id,
             status: 'pending'
         });
         res.json({authorization_url, reference})
@@ -93,7 +94,16 @@ export const verify = async (req, res) => {
         req.user.cartItems = [];
         await req.user.save();
     }
-
+    try {
+      await Promise.all(
+        [
+          orderAdminNotificationEmail(order, req.user),
+          orderCustomerNotificationEmail(order, req.user)
+        ]
+      )
+    } catch (error) {
+     console.error("Error sending order notifications:", error.message)
+    }
     res.json({ status, amount: amount / 100 }); // Convert back to NGN
   } catch (error) {
     console.error('Verification error:', error.response?.data || error.message);
