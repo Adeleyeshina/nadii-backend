@@ -39,7 +39,7 @@ export const recommendedProducts = async (req, res) => {
                     _id : 1,
                     name : 1,
                     price : 1,
-                    image : 1
+                    featuredImage : 1
                 }
             }
         ])
@@ -75,55 +75,80 @@ export const getFeaturedProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
     try {
-        const {name, description, price, image} = req.body
-        
-        let cloudinaryResponse = null
-        
-        if(image) {
-            cloudinaryResponse = await cloudinary.uploader.upload(image, {folder : "products"})
+        const { name, description, price, featuredImage, images } = req.body;
+
+        if (!featuredImage) {
+            return res.status(400).json({ message: "Featured image is required" });
+        }
+        if (!images || !Array.isArray(images) || images.length === 0) {
+            return res.status(400).json({ message: "At least one additional image is required" });
+        }
+
+        // upload featured image
+        const featuredResult = await cloudinary.uploader.upload(featuredImage, { folder: "products" });
+
+        // upload other images
+        const uploadedImages = [];
+        for (const img of images) {
+            const result = await cloudinary.uploader.upload(img, { folder: "products" });
+            uploadedImages.push(result.secure_url);
         }
 
         const product = await Product.create({
             name,
             description,
             price,
-            image : cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url :'',
+            featuredImage: featuredResult.secure_url,
+            images: uploadedImages,
+        });
 
-        })
-        res.status(201).json(product)
+        res.status(201).json(product);
     } catch (error) {
         console.log("Error in createProduct controller", error.message);
-        res.status(500).json({message : "Server error", error : error.message})
+        res.status(500).json({ message: "Server error", error: error.message });
     }
-}
+};
+
 
 export const deleteProduct = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id)
+        const product = await Product.findById(req.params.id);
 
-        if(!product) {
-            return res.status(404).json({mesage : "Product not found"})
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
         }
-        
-        if(product.image) {
-            const publicId = product.image.split("/").pop().split(".")[0]
+
+        // Delete featured image
+        if (product.featuredImage) {
+            const publicId = product.featuredImage.split("/").pop().split(".")[0];
             try {
-                await cloudinary.uploader.destroy(`products/${publicId}`)
-                console.log("deleted image from cloudinary");
-                
+                await cloudinary.uploader.destroy(`products/${publicId}`);
+                console.log("Deleted featured image from Cloudinary");
             } catch (error) {
-                console.log("Error deleting image from cloudinary", error);
-                
+                console.log("Error deleting featured image", error);
             }
         }
 
-        await Product.findByIdAndDelete(req.params.id)
-        res.json({message : "Product deleted succesfully"})
+        // Delete additional images
+        if (product.images && Array.isArray(product.images)) {
+            for (const img of product.images) {
+                const publicId = img.split("/").pop().split(".")[0];
+                try {
+                    await cloudinary.uploader.destroy(`products/${publicId}`);
+                } catch (error) {
+                    console.log("Error deleting image", error);
+                }
+            }
+        }
+
+        await Product.findByIdAndDelete(req.params.id);
+        res.json({ message: "Product deleted successfully" });
     } catch (error) {
         console.log("Error in deleteProduct controller", error.message);
-        res.status(500).json({message : "Server error", error : error.message})
+        res.status(500).json({ message: "Server error", error: error.message });
     }
-}
+};
+
 
 
 export const toggleFeaturedProduct = async (req, res) => {
@@ -141,6 +166,25 @@ export const toggleFeaturedProduct = async (req, res) => {
         console.log("Error in toggleFeatutedProduct controller", error.messasge);
         res.status(500).json({message : "Server error", error : error.message})
     }
+}
+export const toggleSoldOut = async(req, res) => {
+    try {
+        
+        if(!mongoose.Types.ObjectId.isValid(req.params.id)){
+            return res.status(400).json({message : 'Invalid Product id'})
+        }
+        const product = await Product.findById(req.params.id)
+        if(!product) {
+            return res.status(404).json({message : "Product not found"})
+        }
+        product.soldOut = !product.soldOut
+        const updatedProduct = await product.save()
+        await updatedProductsCache ()
+        res.status(200).json(updatedProduct)
+    } catch (error) {
+        console.log("Error in toggleSoldOUt controller", error);
+        res.status(500).json({message : "Server error", error : error.message})
+    } 
 }
 
 async function updatedProductsCache() {

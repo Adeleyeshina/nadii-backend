@@ -9,7 +9,7 @@ export const allOrders = async (req, res) => {
             select : 'name email'
         }).populate({
         path : 'products.product',
-        select : 'name image'
+        select : 'name featuredImage'
        }).populate({
         path : 'address',
         select : "street city state phone"
@@ -29,7 +29,7 @@ export const userOrders = async (req, res) => {
 
        const order = await Order.find({user : user._id}).populate({
         path : 'products.product',
-        select : 'name image'
+        select : 'name featuredImage'
        }).populate({
         path : 'address',
         select : "street city state phone"

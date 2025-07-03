@@ -92,7 +92,7 @@ export const login = async(req, res) => {
     if(user && isPassword && user.isVerified) {
         const {accessToken, refreshToken } = generateToken(user._id)
         try {
-            await redis.set(`refresh_token:${user._id}`, refreshToken, "EX", 7*24*60)
+            await redis.set(`refresh_token:${user._id}`, refreshToken, "EX", 1*24*60*60)
         } catch (error) {
             console.log("Error in sending token to redis in login controller", error.message);
             
@@ -227,6 +227,7 @@ export const resetPassword = async(req, res) =>{
 }
 
 export const refreshToken = async (req, res) => {
+    console.log('dd')
     try {
         const refreshToken = req.cookies.refreshToken;
         if(!refreshToken) {
@@ -237,7 +238,7 @@ export const refreshToken = async (req, res) => {
         if(storedToken !== refreshToken) {
             return res.status(401).json({message: 'Invalid resfresh token'})
         }
-        const accessToken = jwt.sign({userId: decoded.UserId}, process.env.ACCESS_TOKEN_SECRET,{
+        const accessToken = jwt.sign({userId: decoded.userId}, process.env.ACCESS_TOKEN_SECRET,{
             expiresIn : "15m"
         })
         res.cookie ("accessToken", accessToken, {

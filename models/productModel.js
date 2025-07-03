@@ -13,11 +13,20 @@ const productSchema = new mongoose.Schema({
         type : Number,
         required : true
     },
-    image :{
-        type : String,
-        required : [true, "Image is required"]
+    images: { 
+        type: [String], 
+        required: [true, "At least one image is required"] 
     },
+    featuredImage: { 
+        type: String, 
+        required: [true, "Featured image is required"] 
+    },
+
     isFeatured : {
+        type : Boolean,
+        default : false
+    },
+    soldOut : {
         type : Boolean,
         default : false
     }
