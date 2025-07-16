@@ -197,3 +197,87 @@ async function updatedProductsCache() {
         
     }
 }
+
+export const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, featuredImage, images } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Replace featured image if a new one is sent
+    let newFeaturedImage = product.featuredImage;
+    if (featuredImage && featuredImage.startsWith("data:image")) {
+      // Delete old featured image if it's a URL
+      if (product.featuredImage && product.featuredImage.startsWith("http")) {
+        try {
+          const oldPublicId = getCloudinaryPublicId(product.featuredImage);
+          await cloudinary.uploader.destroy(oldPublicId);
+        } catch (err) {
+          console.log("Failed to delete old featured image:", err.message);
+        }
+      }
+
+      const result = await cloudinary.uploader.upload(featuredImage, {
+        folder: "products",
+      });
+      newFeaturedImage = result.secure_url;
+    }
+
+    // Replace other images if new ones are sent
+    let newImages = product.images;
+    if (Array.isArray(images) && images.length > 0 && images[0].startsWith("data:image")) {
+      // Delete all previous images
+      for (const img of product.images) {
+        if (img.startsWith("http")) {
+          try {
+            const imgPublicId = getCloudinaryPublicId(img);
+            await cloudinary.uploader.destroy(imgPublicId);
+          } catch (err) {
+            console.log("Failed to delete image:", err.message);
+          }
+        }
+      }
+
+      const uploadedImages = [];
+      for (const img of images) {
+        const result = await cloudinary.uploader.upload(img, {
+          folder: "products",
+        });
+        uploadedImages.push(result.secure_url);
+      }
+      newImages = uploadedImages;
+    }
+
+    // Update product fields
+    product.name = name || product.name;
+    product.description = description || product.description;
+    product.price = price || product.price;
+    product.featuredImage = newFeaturedImage;
+    product.images = newImages;
+
+    const updated = await product.save();
+    await updatedProductsCache();
+
+    res.status(200).json(updated);
+  } catch (error) {
+    console.log("Error in updateProduct controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Utility to extract cloudinary public_id
+function getCloudinaryPublicId(url) {
+  const parts = url.split('/');
+  const versionIndex = parts.findIndex(p => p.startsWith('v'));
+  const publicIdParts = parts.slice(versionIndex + 1);
+  return 'products/' + publicIdParts.join('/').split('.')[0];
+}
+
